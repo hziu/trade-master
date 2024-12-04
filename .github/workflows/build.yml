@@ -1,0 +1,114 @@
+name: Electron Cross-Platform Build
+
+on:
+  push:
+    tags:
+      - "v*" # 触发条件：推送版本标签时
+
+jobs:
+  prepare-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      platforms: ${{ steps.set-platforms.outputs.platforms }}
+    steps:
+      - id: set-platforms
+        run: |
+          echo 'platforms=["linux", "mac", "windows"]' >> $GITHUB_OUTPUT
+
+  build:
+    needs: prepare-matrix
+    strategy:
+      matrix:
+        platform: ${{ fromJson(needs.prepare-matrix.outputs.platforms) }}
+    runs-on: ${{ matrix.platform == 'linux' && 'ubuntu-latest' || matrix.platform == 'mac' && 'macos-latest' ||  'windows-latest' }}
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Get Package Version
+        id: package-version
+        run: |
+          echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Dist
+        run: npm run build
+
+      - name: Build Electron App
+        run: npm run build:app
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Filter and Prepare Artifacts
+        run: |
+          mkdir -p filtered-artifacts
+          # 复制安装文件，排除 .blockmap 和 yml 文件
+          find release/${{ steps.package-version.outputs.VERSION }} \
+            -type f \
+            \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.zip" \) \
+            -not -name "*.yml" -not -name "*.blockmap" \
+            -exec cp {} filtered-artifacts/ \;
+        shell: bash
+
+      - name: Upload Platform Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-app
+          path: filtered-artifacts/
+          retention-days: 5
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Get Package Version
+        id: package-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List Artifacts
+        run: ls -R artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.package-version.outputs.VERSION }}
+          name: Release ${{ steps.package-version.outputs.VERSION }}
+          files: artifacts/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
