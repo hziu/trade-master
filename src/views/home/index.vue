@@ -71,96 +71,12 @@
 
                 <!-- K线图表 -->
                 <div class="chart-container">
-                    <div class="chart-header">
-                        <div class="chart-tools">
-                            <el-button-group>
-                                <el-button size="small">分时</el-button>
-                                <el-button size="small" type="primary">K线</el-button>
-                            </el-button-group>
-                            <el-select v-model="timeframe" size="small">
-                                <el-option label="1分钟" value="1m" />
-                                <el-option label="5分钟" value="5m" />
-                                <el-option label="15分钟" value="15m" />
-                                <el-option label="1小时" value="1h" />
-                                <el-option label="4小时" value="4h" />
-                                <el-option label="1天" value="1d" />
-                            </el-select>
-                        </div>
-                        <div class="chart-indicators">
-                            <el-button size="small" icon="Plus">指标</el-button>
-                        </div>
-                    </div>
-                    <div ref="mainChart" class="main-chart"></div>
+                    <Main />
                 </div>
+
             </div>
 
-            <!-- 右侧交易面板 -->
-            <div class="trading-panel">
-                <el-tabs v-model="orderType">
-                    <el-tab-pane label="限价委托" name="limit">
-                        <div class="order-form">
-                            <div class="price-input">
-                                <label>价格</label>
-                                <el-input v-model="limitPrice" type="number">
-                                    <template #append>CNY</template>
-                                </el-input>
-                            </div>
-                            <div class="amount-input">
-                                <label>数量</label>
-                                <el-input v-model="amount" type="number">
-                                    <template #append>份</template>
-                                </el-input>
-                            </div>
-                            <el-slider v-model="percentage" :marks="{
-                                0: '0%',
-                                25: '25%',
-                                50: '50%',
-                                75: '75%',
-                                100: '100%'
-                            }" />
-                            <div class="order-buttons">
-                                <el-button type="success" class="buy-button">买入</el-button>
-                                <el-button type="danger" class="sell-button">卖出</el-button>
-                            </div>
-                        </div>
-                    </el-tab-pane>
-                    <el-tab-pane label="市价委托" name="market">
-                        <!-- 市价委托表单 -->
-                    </el-tab-pane>
-                    <el-tab-pane label="计划委托" name="stop">
-                        <!-- 计划委托表单 -->
-                    </el-tab-pane>
-                </el-tabs>
 
-                <!-- 订单簿 -->
-                <div class="order-book">
-                    <div class="order-book-header">
-                        <span>价格(CNY)</span>
-                        <span>数量(份)</span>
-                        <span>累计</span>
-                    </div>
-                    <div class="asks">
-                        <div v-for="ask in asks" :key="ask.price" class="order-row">
-                            <span class="price red">{{ ask.price }}</span>
-                            <span class="amount">{{ ask.amount }}</span>
-                            <span class="total">{{ ask.total }}</span>
-                            <div class="depth-visualization" :style="{ width: ask.percentage + '%' }"></div>
-                        </div>
-                    </div>
-                    <div class="current-price">
-                        <span class="price">3.456</span>
-                        <span class="change up">≈ 3.456 CNY</span>
-                    </div>
-                    <div class="bids">
-                        <div v-for="bid in bids" :key="bid.price" class="order-row">
-                            <span class="price green">{{ bid.price }}</span>
-                            <span class="amount">{{ bid.amount }}</span>
-                            <span class="total">{{ bid.total }}</span>
-                            <div class="depth-visualization" :style="{ width: bid.percentage + '%' }"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- 底部最新成交 -->
@@ -180,6 +96,69 @@
         </div>
     </div>
 </template>
+
+<script lang="ts" setup>
+import { ref } from 'vue'
+import Main from './components/main.vue'
+
+// 搜索和市场数据
+const searchMarket = ref('')
+const favoriteMarkets = ref([])
+const stockMarkets = ref([])
+const bondMarkets = ref([])
+
+// 图表相关
+const timeframe = ref('1h')
+
+// 交易面板数据
+const orderType = ref('limit')
+const limitPrice = ref('')
+const amount = ref('')
+const percentage = ref(0)
+
+// 订单簿数据
+const asks = ref([
+    { price: 3.458, amount: 1000, total: 3458, percentage: 80 },
+    { price: 3.457, amount: 500, total: 1728.5, percentage: 40 },
+    // ... 更多卖单数据
+])
+
+const bids = ref([
+    { price: 3.455, amount: 800, total: 2764, percentage: 60 },
+    { price: 3.454, amount: 1200, total: 4144.8, percentage: 90 },
+    // ... 更多买单数据
+])
+
+// 最新成交数据
+const recentTrades = ref([
+    {
+        time: '14:30:25',
+        price: 3.456,
+        amount: 100,
+        total: 345.6,
+        side: 'buy'
+    },
+    // ... 更多成交数据
+])
+
+// 图表引用
+// 在 script 标签内添加以下类型定义
+interface Trade {
+    time: string
+    price: number
+    amount: number
+    total: number
+    side: 'buy' | 'sell'
+}
+
+interface OrderBookItem {
+    price: number
+    amount: number
+    total: number
+    percentage: number
+}
+
+</script>
 
 <style scoped>
 .trading-platform {
@@ -369,67 +348,3 @@
 
 /* 其他样式保持不变 */
 </style>
-
-<script lang="ts" setup>
-import { ref } from 'vue'
-
-// 搜索和市场数据
-const searchMarket = ref('')
-const favoriteMarkets = ref([])
-const stockMarkets = ref([])
-const bondMarkets = ref([])
-
-// 图表相关
-const timeframe = ref('1h')
-
-// 交易面板数据
-const orderType = ref('limit')
-const limitPrice = ref('')
-const amount = ref('')
-const percentage = ref(0)
-
-// 订单簿数据
-const asks = ref([
-    { price: 3.458, amount: 1000, total: 3458, percentage: 80 },
-    { price: 3.457, amount: 500, total: 1728.5, percentage: 40 },
-    // ... 更多卖单数据
-])
-
-const bids = ref([
-    { price: 3.455, amount: 800, total: 2764, percentage: 60 },
-    { price: 3.454, amount: 1200, total: 4144.8, percentage: 90 },
-    // ... 更多买单数据
-])
-
-// 最新成交数据
-const recentTrades = ref([
-    {
-        time: '14:30:25',
-        price: 3.456,
-        amount: 100,
-        total: 345.6,
-        side: 'buy'
-    },
-    // ... 更多成交数据
-])
-
-// 图表引用
-const mainChart = ref(null)
-
-// 在 script 标签内添加以下类型定义
-interface Trade {
-    time: string
-    price: number
-    amount: number
-    total: number
-    side: 'buy' | 'sell'
-}
-
-interface OrderBookItem {
-    price: number
-    amount: number
-    total: number
-    percentage: number
-}
-
-</script>

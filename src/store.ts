@@ -11,4 +11,4 @@ export const useUserStore = defineStore('counter', () => {
     }
 
     return { islogin, login }
-})
+}, { persist: true })
