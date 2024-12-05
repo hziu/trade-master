@@ -88,7 +88,6 @@ const handleLogin = async () => {
 
 <style scoped>
 .login-container {
-    background-image: url('@/assets/login-bg.jpg');
     background-size: cover;
     background-position: center;
     position: relative;
