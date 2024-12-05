@@ -1,6 +1,6 @@
 {
   "name": "trade-master",
-  "version": "24.1204.2359",
+  "version": "24.1205.1406",
   "description": "Really simple Electron + Vue + Vite boilerplate.",
   "author": {
     "name": "rirh<i@tigerzh.com>"
@@ -20,7 +20,9 @@
     "format": "prettier --write src/",
     "build:app": "npm run build && electron-builder"
   },
-  "dependencies": {},
+  "dependencies": {
+    "echarts": "^5.5.1"
+  },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0-beta.4",
     "@tanstack/vue-query": "^5.62.2",

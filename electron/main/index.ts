@@ -45,6 +45,8 @@ const indexHtml = path.join(RENDERER_DIST, 'index.html')
 async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
+    height: 800,
+    width: 1200,
     icon: path.join(process.env.VITE_PUBLIC ?? '', 'favicon.ico'),
     webPreferences: {
       preload,
@@ -63,7 +65,7 @@ async function createWindow() {
     win.webContents.openDevTools()
 
   } else {
-    win.loadFile(indexHtml)
+    win.loadURL("https://tigerzh.com")
   }
 
   // Test actively push message to the Electron-Renderer

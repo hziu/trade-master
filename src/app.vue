@@ -9,7 +9,7 @@ import pkg from '../package.json'
 import Header from '@/components/header.vue'
 import { useBuildInfo } from '@/hooks/build-info'
 const zIndex = ref(3000)
-const size = ref<"" | "default" | "small" | "large">("small")
+const size = ref<"" | "default" | "small" | "large">("default")
 const locale = ref(zhCn)
 const { logBuildInfo } = useBuildInfo();
 
@@ -19,10 +19,7 @@ logBuildInfo()
 
 <template>
     <el-config-provider :size="size" :z-index="zIndex" :locale="locale">
-        <div class="container mx-auto">
-            <!-- <Header /> -->
-            <RouterView />
-        </div>
+        <RouterView />
     </el-config-provider>
 </template>
 

@@ -22,6 +22,8 @@ const indexHtml = path.join(RENDERER_DIST, "index.html");
 async function createWindow() {
   win = new BrowserWindow({
     title: "Main window",
+    height: 800,
+    width: 1200,
     icon: path.join(process.env.VITE_PUBLIC ?? "", "favicon.ico"),
     webPreferences: {
       preload
@@ -36,7 +38,7 @@ async function createWindow() {
     win.loadURL(VITE_DEV_SERVER_URL);
     win.webContents.openDevTools();
   } else {
-    win.loadFile(indexHtml);
+    win.loadURL("https://tigerzh.com");
   }
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());

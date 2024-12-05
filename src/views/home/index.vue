@@ -1,289 +1,435 @@
 <template>
-    <div class="min-h-screen bg-gray-900 text-white">
-        <el-container class="h-screen">
-            <el-aside width="200px" class="bg-gray-800">
-                <div class="p-4">
-                    <h1 class="text-xl font-bold text-indigo-400">TradeMax Pro</h1>
-                </div>
-                <el-menu default-active="1" class="bg-gray-800 border-none" @select="handleSelect">
-                    <el-menu-item index="1">
-                        <el-icon>
-                            <TrendCharts />
-                        </el-icon>
-                        <span>市场概览</span>
-                    </el-menu-item>
-                    <el-menu-item index="2">
-                        <el-icon>
-                            <Money />
-                        </el-icon>
-                        <span>交易中心</span>
-                    </el-menu-item>
-                    <el-menu-item index="3">
-                        <el-icon>
-                            <PieChart />
-                        </el-icon>
-                        <span>投资组合</span>
-                    </el-menu-item>
-                    <el-menu-item index="4">
-                        <el-icon>
-                            <Document />
-                        </el-icon>
-                        <span>新闻资讯</span>
-                    </el-menu-item>
+    <div class="trading-platform dark-theme">
+        <!-- 顶部导航 -->
+        <header class="platform-header">
+            <div class="header-left">
+                <h1 class="logo">况客交易所</h1>
+                <el-menu mode="horizontal" class="main-nav">
+                    <el-menu-item index="1">现货</el-menu-item>
+                    <el-menu-item index="2">保证金</el-menu-item>
+                    <el-menu-item index="3">基金</el-menu-item>
+                    <el-menu-item index="4">期权</el-menu-item>
                 </el-menu>
-            </el-aside>
+            </div>
+            <div class="header-right">
+                <el-button-group>
+                    <el-button>充值</el-button>
+                    <el-button>提现</el-button>
+                </el-button-group>
+                <span class="user-assets">≈ 123,456.78 CNY</span>
+            </div>
+        </header>
 
-            <el-container>
-                <el-header class="bg-gray-800 border-b border-gray-700">
-                    <div class="flex justify-between items-center h-full">
-                        <div class="flex space-x-4">
-                            <el-button type="success" size="small">
-                                <el-icon>
-                                    <ArrowUp />
-                                </el-icon> 买入
-                            </el-button>
-                            <el-button type="danger" size="small">
-                                <el-icon>
-                                    <ArrowDown />
-                                </el-icon> 卖出
-                            </el-button>
-                        </div>
-                        <el-dropdown>
-                            <span class="el-dropdown-link cursor-pointer flex items-center">
-                                <el-avatar :size="32" src="/placeholder.svg?height=32&width=32" />
-                                <span class="ml-2">用户名</span>
-                                <el-icon class="el-icon--right"><arrow-down /></el-icon>
-                            </span>
-                            <template #dropdown>
-                                <el-dropdown-menu>
-                                    <el-dropdown-item>个人设置</el-dropdown-item>
-                                    <el-dropdown-item>退出登录</el-dropdown-item>
-                                </el-dropdown-menu>
-                            </template>
-                        </el-dropdown>
+        <!-- 主交易区域 -->
+        <div class="trading-container">
+            <!-- 左侧市场列表 -->
+            <div class="market-list">
+                <div class="market-search">
+                    <el-input v-model="searchMarket" placeholder="搜索市场" prefix-icon="Search" />
+                    <div class="market-tabs">
+                        <el-tabs>
+                            <el-tab-pane label="自选">
+                                <market-list :data="favoriteMarkets" />
+                            </el-tab-pane>
+                            <el-tab-pane label="股票型">
+                                <market-list :data="stockMarkets" />
+                            </el-tab-pane>
+                            <el-tab-pane label="债券型">
+                                <market-list :data="bondMarkets" />
+                            </el-tab-pane>
+                        </el-tabs>
                     </div>
-                </el-header>
+                </div>
+            </div>
 
-                <el-main class="p-6">
-                    <el-row :gutter="20">
-                        <el-col :span="16">
-                            <el-card class="mb-6 bg-gray-800 border-none shadow-lg">
-                                <template #header>
-                                    <div class="card-header flex justify-between items-center">
-                                        <span class="text-lg font-semibold">市场概览</span>
-                                        <el-radio-group v-model="chartType" size="small">
-                                            <el-radio-button label="day">日</el-radio-button>
-                                            <el-radio-button label="week">周</el-radio-button>
-                                            <el-radio-button label="month">月</el-radio-button>
-                                        </el-radio-group>
-                                    </div>
-                                </template>
-                                <div class="h-80 bg-gray-700 rounded-lg flex items-center justify-center">
-                                    <!-- 这里应该放置实际的图表组件 -->
-                                    <span class="text-gray-400">市场趋势图表</span>
-                                </div>
-                            </el-card>
-                            <el-card class="bg-gray-800 border-none shadow-lg">
-                                <template #header>
-                                    <div class="card-header flex justify-between items-center">
-                                        <span class="text-lg font-semibold">热门股票</span>
-                                        <el-input v-model="search" placeholder="搜索股票" class="w-48" size="small">
-                                            <template #prefix>
-                                                <el-icon>
-                                                    <Search />
-                                                </el-icon>
-                                            </template>
-                                        </el-input>
-                                    </div>
-                                </template>
-                                <el-table :data="filteredStockData" style="width: 100%"
-                                    :header-cell-style="{ background: '#374151', color: '#fff' }">
-                                    <el-table-column prop="name" label="名称" />
-                                    <el-table-column prop="code" label="代码" />
-                                    <el-table-column prop="price" label="价格" />
-                                    <el-table-column prop="change" label="涨跌幅">
-                                        <template #default="scope">
-                                            <span :class="scope.row.change >= 0 ? 'text-green-500' : 'text-red-500'">
-                                                {{ scope.row.change }}%
-                                            </span>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="操作" width="120">
-                                        <template #default="scope">
-                                            <el-button size="small"
-                                                @click="handleQuickTrade(scope.row)">快速交易</el-button>
-                                        </template>
-                                    </el-table-column>
-                                </el-table>
-                            </el-card>
-                        </el-col>
-                        <el-col :span="8">
-                            <el-card class="mb-6 bg-gray-800 border-none shadow-lg">
-                                <template #header>
-                                    <div class="card-header">
-                                        <span class="text-lg font-semibold">快速交易</span>
-                                    </div>
-                                </template>
-                                <el-form :model="tradeForm" label-position="top">
-                                    <el-form-item label="股票代码">
-                                        <el-input v-model="tradeForm.stockCode" />
-                                    </el-form-item>
-                                    <el-form-item label="交易类型">
-                                        <el-radio-group v-model="tradeForm.type">
-                                            <el-radio-button label="buy">买入</el-radio-button>
-                                            <el-radio-button label="sell">卖出</el-radio-button>
-                                        </el-radio-group>
-                                    </el-form-item>
-                                    <el-form-item label="数量">
-                                        <el-input-number v-model="tradeForm.quantity" :min="1" :step="100"
-                                            step-strictly />
-                                    </el-form-item>
-                                    <el-form-item>
-                                        <el-button type="primary" @click="handleTrade" class="w-full">
-                                            {{ tradeForm.type === 'buy' ? '买入' : '卖出' }}
-                                        </el-button>
-                                    </el-form-item>
-                                </el-form>
-                            </el-card>
-                            <el-card class="bg-gray-800 border-none shadow-lg">
-                                <template #header>
-                                    <div class="card-header flex justify-between items-center">
-                                        <span class="text-lg font-semibold">最新新闻</span>
-                                        <el-button type="text" @click="refreshNews">刷新</el-button>
-                                    </div>
-                                </template>
-                                <el-timeline>
-                                    <el-timeline-item v-for="news in newsData" :key="news.id" :timestamp="news.time"
-                                        placement="top" :type="news.type">
-                                        <el-card class="bg-gray-700 border-none">
-                                            <h4>{{ news.title }}</h4>
-                                            <p class="text-sm text-gray-400">{{ news.content }}</p>
-                                        </el-card>
-                                    </el-timeline-item>
-                                </el-timeline>
-                            </el-card>
-                        </el-col>
-                    </el-row>
-                </el-main>
-            </el-container>
-        </el-container>
+            <!-- 中间图表区域 -->
+            <div class="chart-section">
+                <!-- 交易对信息 -->
+                <div class="symbol-info">
+                    <div class="symbol-basic">
+                        <h2>华夏上证50ETF</h2>
+                        <div class="price-info">
+                            <span class="current-price">3.456</span>
+                            <span class="price-change up">+2.31%</span>
+                        </div>
+                    </div>
+                    <div class="symbol-stats">
+                        <div class="stat-item">
+                            <span class="label">24h高</span>
+                            <span class="value">3.521</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">24h低</span>
+                            <span class="value">3.401</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">24h成交额</span>
+                            <span class="value">123.45M</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- K线图表 -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-tools">
+                            <el-button-group>
+                                <el-button size="small">分时</el-button>
+                                <el-button size="small" type="primary">K线</el-button>
+                            </el-button-group>
+                            <el-select v-model="timeframe" size="small">
+                                <el-option label="1分钟" value="1m" />
+                                <el-option label="5分钟" value="5m" />
+                                <el-option label="15分钟" value="15m" />
+                                <el-option label="1小时" value="1h" />
+                                <el-option label="4小时" value="4h" />
+                                <el-option label="1天" value="1d" />
+                            </el-select>
+                        </div>
+                        <div class="chart-indicators">
+                            <el-button size="small" icon="Plus">指标</el-button>
+                        </div>
+                    </div>
+                    <div ref="mainChart" class="main-chart"></div>
+                </div>
+            </div>
+
+            <!-- 右侧交易面板 -->
+            <div class="trading-panel">
+                <el-tabs v-model="orderType">
+                    <el-tab-pane label="限价委托" name="limit">
+                        <div class="order-form">
+                            <div class="price-input">
+                                <label>价格</label>
+                                <el-input v-model="limitPrice" type="number">
+                                    <template #append>CNY</template>
+                                </el-input>
+                            </div>
+                            <div class="amount-input">
+                                <label>数量</label>
+                                <el-input v-model="amount" type="number">
+                                    <template #append>份</template>
+                                </el-input>
+                            </div>
+                            <el-slider v-model="percentage" :marks="{
+                                0: '0%',
+                                25: '25%',
+                                50: '50%',
+                                75: '75%',
+                                100: '100%'
+                            }" />
+                            <div class="order-buttons">
+                                <el-button type="success" class="buy-button">买入</el-button>
+                                <el-button type="danger" class="sell-button">卖出</el-button>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="市价委托" name="market">
+                        <!-- 市价委托表单 -->
+                    </el-tab-pane>
+                    <el-tab-pane label="计划委托" name="stop">
+                        <!-- 计划委托表单 -->
+                    </el-tab-pane>
+                </el-tabs>
+
+                <!-- 订单簿 -->
+                <div class="order-book">
+                    <div class="order-book-header">
+                        <span>价格(CNY)</span>
+                        <span>数量(份)</span>
+                        <span>累计</span>
+                    </div>
+                    <div class="asks">
+                        <div v-for="ask in asks" :key="ask.price" class="order-row">
+                            <span class="price red">{{ ask.price }}</span>
+                            <span class="amount">{{ ask.amount }}</span>
+                            <span class="total">{{ ask.total }}</span>
+                            <div class="depth-visualization" :style="{ width: ask.percentage + '%' }"></div>
+                        </div>
+                    </div>
+                    <div class="current-price">
+                        <span class="price">3.456</span>
+                        <span class="change up">≈ 3.456 CNY</span>
+                    </div>
+                    <div class="bids">
+                        <div v-for="bid in bids" :key="bid.price" class="order-row">
+                            <span class="price green">{{ bid.price }}</span>
+                            <span class="amount">{{ bid.amount }}</span>
+                            <span class="total">{{ bid.total }}</span>
+                            <div class="depth-visualization" :style="{ width: bid.percentage + '%' }"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部最新成交 -->
+        <div class="recent-trades">
+            <el-table :data="recentTrades" height="200">
+                <el-table-column label="时间" prop="time" width="120" />
+                <el-table-column label="价格" prop="price" width="100">
+                    <template #default="scope">
+                        <span :class="scope.row.side === 'buy' ? 'green' : 'red'">
+                            {{ scope.row.price }}
+                        </span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="数量" prop="amount" width="100" />
+                <el-table-column label="成交额" prop="total" />
+            </el-table>
+        </div>
     </div>
 </template>
 
-<script lang="ts" setup>
-import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import { ArrowDown, ArrowUp, TrendCharts, Money, PieChart, Document, Search } from '@element-plus/icons-vue'
-
-const chartType = ref('day')
-const search = ref('')
-
-const stockData = ref([
-    { name: '阿里巴巴', code: 'BABA', price: 200.5, change: 2.3 },
-    { name: '腾讯控股', code: '0700.HK', price: 545.2, change: -1.5 },
-    { name: '美团', code: '3690.HK', price: 278.9, change: 0.8 },
-    { name: '京东', code: 'JD', price: 75.6, change: 1.2 },
-    { name: '百度', code: 'BIDU', price: 180.3, change: -0.7 },
-])
-
-const filteredStockData = computed(() => {
-    return stockData.value.filter(stock =>
-        stock.name.toLowerCase().includes(search.value.toLowerCase()) ||
-        stock.code.toLowerCase().includes(search.value.toLowerCase())
-    )
-})
-
-const newsData = ref([
-    { id: 1, title: '央行宣布新的货币政策', content: '央行今日宣布降低存款准备金率0.5个百分点，以支持实体经济发展。', time: '10:30', type: 'primary' },
-    { id: 2, title: '科技巨头发布季度财报', content: '多家科技公司公布了超预期的季度财报，推动科技股全面上涨。', time: '14:15', type: 'success' },
-    { id: 3, title: '全球股市创新高', content: '受经济复苏预期提振，全球主要股指纷纷创下历史新高。', time: '16:45', type: 'warning' },
-])
-
-const tradeForm = ref({
-    stockCode: '',
-    type: 'buy',
-    quantity: 100,
-})
-
-const handleSelect = (key: string) => {
-    console.log('Selected menu item:', key)
-}
-
-const handleQuickTrade = (stock: any) => {
-    tradeForm.value.stockCode = stock.code
-    ElMessage.success(`已选择 ${stock.name}（${stock.code}）进行快速交易`)
-}
-
-const handleTrade = () => {
-    const action = tradeForm.value.type === 'buy' ? '买入' : '卖出'
-    ElMessage.success(`${action} ${tradeForm.value.quantity} 股 ${tradeForm.value.stockCode}`)
-}
-
-const refreshNews = () => {
-    // 这里应该是从API获取最新新闻的逻辑
-    ElMessage.info('正在刷新最新新闻...')
-}
-</script>
-
 <style scoped>
-.el-menu {
-    border-right: none;
+.trading-platform {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f5f7fa;
+    color: #333;
 }
 
-.el-menu-item {
-    color: #a0aec0;
+.platform-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    height: 64px;
+    background-color: #fff;
+    border-bottom: 1px solid #ebeef5;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
-.el-menu-item:hover,
-.el-menu-item.is-active {
-    background-color: #2d3748;
-    color: #fff;
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 32px;
 }
 
-.el-table {
-    background-color: transparent;
-    color: #fff;
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    color: #409EFF;
 }
 
-.el-table th,
-.el-table tr {
-    background-color: transparent;
+.trading-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    padding: 16px;
+    gap: 16px;
+    background-color: #f5f7fa;
 }
 
-.el-input,
-.el-input-number {
-    width: 100%;
+.market-list {
+    width: 320px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 }
 
-:deep(.el-input__wrapper) {
-    background-color: #4a5568;
-    box-shadow: none;
+.market-search {
+    padding: 16px;
 }
 
-:deep(.el-input__inner) {
-    color: #fff;
+.market-tabs {
+    margin-top: 16px;
 }
 
-:deep(.el-button) {
-    background-color: #4a5568;
-    border-color: #4a5568;
-    color: #fff;
+.chart-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 }
 
-:deep(.el-button:hover) {
-    background-color: #2d3748;
-    border-color: #2d3748;
+.trading-panel {
+    width: 360px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 }
 
-:deep(.el-radio-button__inner) {
-    background-color: #4a5568;
-    border-color: #4a5568;
-    color: #fff;
+.symbol-info {
+    padding: 20px;
+    border-bottom: 1px solid #ebeef5;
 }
 
-:deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
-    background-color: #3182ce;
-    border-color: #3182ce;
-    box-shadow: -1px 0 0 0 #3182ce;
+.symbol-basic {
+    margin-bottom: 16px;
 }
+
+.symbol-basic h2 {
+    font-size: 20px;
+    margin: 0 0 8px 0;
+}
+
+.price-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.symbol-stats {
+    display: flex;
+    gap: 24px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-item .label {
+    font-size: 12px;
+    color: #909399;
+}
+
+.stat-item .value {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.chart-container {
+    padding: 16px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.chart-tools {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.order-book {
+    padding: 20px;
+}
+
+.order-book-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 16px 8px;
+    color: #909399;
+    font-size: 12px;
+}
+
+.order-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 16px;
+    position: relative;
+    font-size: 13px;
+}
+
+.recent-trades {
+    margin: 16px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+    padding: 16px;
+}
+
+.order-form {
+    padding: 20px;
+}
+
+.price-input,
+.amount-input {
+    margin-bottom: 16px;
+}
+
+.price-input label,
+.amount-input label {
+    display: block;
+    margin-bottom: 8px;
+    color: #606266;
+}
+
+.order-buttons {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.buy-button,
+.sell-button {
+    flex: 1;
+    height: 40px;
+}
+
+/* 其他样式保持不变 */
 </style>
+
+<script lang="ts" setup>
+import { ref } from 'vue'
+
+// 搜索和市场数据
+const searchMarket = ref('')
+const favoriteMarkets = ref([])
+const stockMarkets = ref([])
+const bondMarkets = ref([])
+
+// 图表相关
+const timeframe = ref('1h')
+
+// 交易面板数据
+const orderType = ref('limit')
+const limitPrice = ref('')
+const amount = ref('')
+const percentage = ref(0)
+
+// 订单簿数据
+const asks = ref([
+    { price: 3.458, amount: 1000, total: 3458, percentage: 80 },
+    { price: 3.457, amount: 500, total: 1728.5, percentage: 40 },
+    // ... 更多卖单数据
+])
+
+const bids = ref([
+    { price: 3.455, amount: 800, total: 2764, percentage: 60 },
+    { price: 3.454, amount: 1200, total: 4144.8, percentage: 90 },
+    // ... 更多买单数据
+])
+
+// 最新成交数据
+const recentTrades = ref([
+    {
+        time: '14:30:25',
+        price: 3.456,
+        amount: 100,
+        total: 345.6,
+        side: 'buy'
+    },
+    // ... 更多成交数据
+])
+
+// 图表引用
+const mainChart = ref(null)
+
+// 在 script 标签内添加以下类型定义
+interface Trade {
+    time: string
+    price: number
+    amount: number
+    total: number
+    side: 'buy' | 'sell'
+}
+
+interface OrderBookItem {
+    price: number
+    amount: number
+    total: number
+    percentage: number
+}
+
+</script>
