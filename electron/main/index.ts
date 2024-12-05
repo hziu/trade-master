@@ -65,7 +65,7 @@ async function createWindow() {
     win.webContents.openDevTools()
 
   } else {
-    win.loadURL("https://tigerzh.com")
+    win.loadFile(indexHtml)
   }
 
   // Test actively push message to the Electron-Renderer

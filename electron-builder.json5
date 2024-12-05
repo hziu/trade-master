@@ -3,7 +3,7 @@
   $schema: "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   appId: "com.qutke.trade.master",
   asar: true,
-  productName: "况客金融交易终端",
+  productName: "况客交易终端",
   directories: {
     output: "release/${version}",
   },
